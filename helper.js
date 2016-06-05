@@ -14,7 +14,7 @@ function surprise(name) {
 }
 
 // simulates sending sms
-exports.sendSms = function(data, callback) {
+exports.sendSms = function (data, callback) {
 
     setTimeout(() => {
         debug(`sending out sms: ${JSON.stringify(data)}`);
@@ -26,7 +26,7 @@ exports.sendSms = function(data, callback) {
 };
 
 // simulates logging to s3
-exports.logToS3 = function(data, callback) {
+exports.logToS3 = function (data, callback) {
 
     setTimeout(() => {
         debug(`putting data to S3: ${JSON.stringify(data)}`);
@@ -37,4 +37,13 @@ exports.logToS3 = function(data, callback) {
             callback(err ? err : surprise('log-to-s3'), { data, logged: true });
         });
     });
+};
+
+// transform firstname + lastname into fullname
+exports.transform = function (data) {
+    if (data && data[0] && data[1]) {
+        return data[0] + ' ' + data[1];
+    }
+
+    return '';
 };

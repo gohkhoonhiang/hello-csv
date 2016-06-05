@@ -8,45 +8,83 @@ const helper = require('./helper');
 
 // 0. Naïve
 
-function naive() {
-    fs.readFile(__dirname + '/sample.csv', function thenParse(err, loadedCsv) {
+// backlog #1
+function readFile(filename) {
+    fs.readFile(__dirname + filename, readFileCallback);
+}
 
-        parse(loadedCsv, function transformEachLine(err, parsed) {
+function readFileCallback(err, loadedCsv) {
+    if (err) {
+        debug(err.message);
+    }
 
-            for (let index in parsed) {
+    parseCsv(loadedCsv);
+}
 
-                let line = parsed[index];
+// backlog #2
+function parseCsv(loadedCsv) {
+    parse(loadedCsv, parseCsvCallback);
+}
 
-                // FIXME: Put your transformation here
+function parseCsvCallback(err, parsed) {
+    if (err) {
+        debug(err.message);
+    }
 
-                if (index > 0) {
-                    debug(`sending data index: ${index - 1}`);
+    for (let index in parsed) {
 
-                    helper.sendSms(line, function afterSending(err, sendingStatus) {
-                        let lineToLog;
-                        if (err) {
-                            debug(err.message);
+        let line = parsed[index];
 
-                            lineToLog = {
-                                sendingStatus,
-                                line,
-                            };
-                        }
+        // backlog #3
+        line = helper.transform(line);
 
-                        if (lineToLog) {
-                            helper.logToS3(lineToLog, function afterLogging(err, loggingStatus) {
-                                if (err) {
-                                    debug(err.message);
-                                }
-                            });
-                        }
-                    });
-                }
+        if (index > 0) {
+            debug(`sending data index: ${index - 1}`);
 
-                index++;
-            }
-        });
+            sendSms(line);
+        }
+
+        index++;
+    }
+}
+
+// backlog #4
+function sendSms(line) {
+    helper.sendSms(line, function (err, sendingStatus) {
+        sendSmsCallback(err, line, sendingStatus);
     });
+}
+
+function sendSmsCallback(err, line, sendingStatus) {
+    let lineToLog;
+    if (err) {
+        debug(err.message);
+
+        lineToLog = {
+            sendingStatus,
+            line,
+        };
+    }
+
+    if (lineToLog) {
+        logToS3(lineToLog);
+    }
+}
+
+// backlog #5
+function logToS3(lineToLog) {
+    helper.logToS3(lineToLog, logToS3Callback);
+}
+
+function logToS3Callback(err, loggingStatus) {
+    if (err) {
+        debug(err.message);
+    }
+}
+
+// naive() is hard to read so break up into smaller functions to handle each part of the process
+function naive() {
+    readFile('/sample.csv');
 }
 
 naive();
